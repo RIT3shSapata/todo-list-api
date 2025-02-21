@@ -1,7 +1,9 @@
 package server
 
 import (
+	"context"
 	"fmt"
+	"net/http"
 
 	"github.com/RIT3shSapata/todo-list-api/internal/config"
 	"github.com/RIT3shSapata/todo-list-api/internal/couchbase"
@@ -9,6 +11,8 @@ import (
 	"github.com/RIT3shSapata/todo-list-api/internal/log"
 	"github.com/RIT3shSapata/todo-list-api/internal/tasks"
 	tasksSvc "github.com/RIT3shSapata/todo-list-api/internal/tasks/service"
+	"github.com/gorilla/mux"
+	"go.uber.org/zap"
 )
 
 type API struct {
@@ -36,4 +40,27 @@ func NewAPI(logger log.Logger, cfg config.Config) (*API, error) {
 		responder: responder,
 		tasksSvc:  tasksSvc,
 	}, nil
+}
+
+func (api *API) Start(ctx context.Context) error {
+	ctx, cancel := context.WithCancel(ctx)
+	defer cancel()
+
+	// g, ctx := errgroup.WithContext(ctx)
+
+	router := mux.NewRouter()
+
+	router.Use(api.loggingMiddleware)
+
+	return nil
+}
+
+func (api *API) loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		uri := r.URL.String()
+		method := r.Method
+
+		api.logger.Info("recived request", zap.String("method", method), zap.String("uri", uri))
+		next.ServeHTTP(w, r)
+	})
 }
