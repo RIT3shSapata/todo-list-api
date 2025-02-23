@@ -1,11 +1,14 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
 
+	"github.com/RIT3shSapata/todo-list-api/cmd/api/server"
 	"github.com/RIT3shSapata/todo-list-api/internal/config"
 	"github.com/RIT3shSapata/todo-list-api/internal/log"
+	"go.uber.org/zap"
 )
 
 func main() {
@@ -22,7 +25,14 @@ func main() {
 		os.Exit(1)
 	}
 
-	logger.Info("API is working")
-	logger.Debug("API is working")
-	logger.Error("API is working")
+	server, err := server.NewAPI(logger, config)
+	if err != nil {
+		logger.Error("failed to create api: %w", zap.Error(err))
+	}
+
+	err = server.Start(context.Background(), config.ServerPort)
+	if err != nil {
+		logger.Error("failed to start api: %w", zap.Error(err))
+	}
+
 }

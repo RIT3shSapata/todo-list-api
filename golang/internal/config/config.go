@@ -12,6 +12,7 @@ type Config struct {
 	Database        string `env:"DATABASE"`
 	Env             string `env:"GOLANG_API_ENV"`
 	LogEncoder      string `env:"GOLANG_API_LOG_ENCODER"`
+	ServerPort      string `env:"API_PORT"`
 	CouchbaseConfig couchbase.CouchbaseConfig
 	LogOpts         log.LogOpts
 }
