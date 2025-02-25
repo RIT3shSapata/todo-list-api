@@ -10,6 +10,7 @@ import (
 	"syscall"
 	"time"
 
+	tasksHandler "github.com/RIT3shSapata/todo-list-api/cmd/api/tasks"
 	"github.com/RIT3shSapata/todo-list-api/internal/config"
 	"github.com/RIT3shSapata/todo-list-api/internal/couchbase"
 	"github.com/RIT3shSapata/todo-list-api/internal/endpoints"
@@ -26,9 +27,10 @@ const (
 )
 
 type API struct {
-	logger    log.Logger
-	responder endpoints.Responder
-	tasksSvc  tasks.Svc
+	logger      log.Logger
+	responder   endpoints.Responder
+	tasksSvc    tasks.Svc
+	taskHandler tasksHandler.Handler
 }
 
 func NewAPI(logger log.Logger, cfg config.Config) (*API, error) {
@@ -45,10 +47,13 @@ func NewAPI(logger log.Logger, cfg config.Config) (*API, error) {
 
 	tasksSvc := tasksSvc.New(clus, col, logger)
 
+	tasksHandler := tasksHandler.New(logger, responder, tasksSvc)
+
 	return &API{
-		logger:    logger,
-		responder: responder,
-		tasksSvc:  tasksSvc,
+		logger:      logger,
+		responder:   responder,
+		tasksSvc:    tasksSvc,
+		taskHandler: *tasksHandler,
 	}, nil
 }
 
@@ -112,6 +117,8 @@ func (api *API) loggingMiddleware(next http.Handler) http.Handler {
 
 func (api *API) registerHandlers(router *mux.Router) *mux.Router {
 	router.HandleFunc("/", api.root)
+
+	api.taskHandler.Register(router)
 	return router
 }
 
