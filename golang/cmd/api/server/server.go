@@ -88,8 +88,8 @@ func (api *API) Start(ctx context.Context, port string) error {
 
 	g.Go(func() error {
 		<-ctx.Done()
-		// ctx, cancel := context.WithTimeout(context.Background(), Timeout)
-		// defer cancel()
+		ctx, cancel := context.WithTimeout(context.Background(), Timeout)
+		defer cancel()
 		return server.Shutdown(ctx)
 	})
 
@@ -123,7 +123,6 @@ func (api *API) registerHandlers(router *mux.Router) *mux.Router {
 }
 
 func (api *API) root(w http.ResponseWriter, r *http.Request) {
-	time.Sleep(5 * time.Second)
 	if _, err := io.WriteString(w, "todo-api is running"); err != nil {
 		api.logger.Error("error getting root", zap.Error(err))
 	}
